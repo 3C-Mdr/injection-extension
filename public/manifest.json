@@ -1,0 +1,19 @@
+
+{
+  "short_name": "React App",
+  "name": "filler",
+  "manifest_version": 3,
+  "version": "1.0",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "index.html"
+  }
+}
+
