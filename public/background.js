@@ -77,18 +77,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
           }
           break;
 
-        case "http://192.168.4.90:8005":
-          console.log("INTERIN ARKIMDATTA");
+        case "http://192.168.4.102:8005":
+          console.log("INTERIN ARKIMDATTA2");
           username = url.searchParams.get("username");
           password = url.searchParams.get("password");
           const hashedArkimeData = await handleCredentials(username, password);
-          if (username && password) {
-            await chrome.scripting.executeScript({
-              target: { tabId },
-              func: autofillFormArkime,
-              args: [hashedArkimeData.username, hashedArkimeData.password],
-            });
-          }
+            if (changeInfo.status === "complete" && tab.url.includes("192.168.4.102:8005")) {
+              chrome.tabs.update(tabId, { url: `http://${hashedArkimeData.username}:${hashedArkimeData.password}@192.168.4.102:8005` });
+            }
           break;
 
         default:
@@ -195,29 +191,6 @@ const autofillFormMISP = (email, password) => {
   }
 };
 
-const autofillFormArkime = (email, password) => {
-  const inputs = document.querySelectorAll("input");
-  inputs.forEach((input, index) => {});
-  const emailField = document.querySelector("#username");
-  const passwordField = document.querySelector("#password");
-  const submitButton = document.querySelector("button[type='submit']");
-
-  if (emailField && passwordField && submitButton) {
-    emailField.value = email;
-    emailField.dispatchEvent(new Event("input", { bubbles: true }));
-    emailField.dispatchEvent(new Event("change", { bubbles: true }));
-
-    passwordField.value = password;
-    passwordField.dispatchEvent(new Event("input", { bubbles: true }));
-    passwordField.dispatchEvent(new Event("change", { bubbles: true }));
-    submitButton.click();
-  } else {
-    console.error("Form elements not found:");
-    if (!emailField) console.error("Email field not found");
-    if (!passwordField) console.error("Password field not found");
-    if (!submitButton) console.error("Submit button not found");
-  }
-};
 
 const secureAutofillFormWazuh = (username, password) => {
   const emailField = document.querySelector(
