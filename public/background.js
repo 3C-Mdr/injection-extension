@@ -1,4 +1,12 @@
-// // background.js
+
+const CONFIG = {
+  GRAYLOG: "http://192.168.4.77:9000",
+  MISP:" http://192.168.4.81",
+  WAZUH:"https://192.168.4.76",
+  RAPID7:"https://insight.rapid7.com",
+  ARKIME:"http://192.168.4.102:8005",
+  SUBLIME:"http://192.168.4.106:3000"
+};
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
@@ -8,7 +16,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       let password = "";
 
       switch (url.origin) {
-        case "http://192.168.4.77:9000":
+        case CONFIG.GRAYLOG:
           username = url.searchParams.get("username");
           password = url.searchParams.get("password");
           const hashedData = await handleCredentials(username, password);
@@ -22,7 +30,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             }, 5000);
           }
           break;
-        case "http://192.168.4.81":
+        case CONFIG.MISP:
           username = url.searchParams.get("username");
           password = url.searchParams.get("password");
           const hashedrapidMISPData = await handleCredentials(
@@ -40,8 +48,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             });
           }
           break;
-        case "https://192.168.4.76":
-          // console.log("Attempting Wazuh login");
+        case CONFIG.WAZUH:
           const nextUrl = url.searchParams.get("nextUrl");
           if (nextUrl) {
             const parsedNextUrl = new URL(
@@ -64,7 +71,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             }, 8000);
           }
           break;
-        case "https://insight.rapid7.com":
+        case CONFIG.RAPID7:
           username = url.searchParams.get("username");
           password = url.searchParams.get("password");
           const hashedrapidData = await handleCredentials(username, password);
@@ -77,8 +84,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
           }
           break;
 
-        case "http://192.168.4.102:8005":
-          console.log("INTERIN ARKIMDATTA2");
+        case CONFIG.ARKIME:
           username = url.searchParams.get("username");
           password = url.searchParams.get("password");
           const hashedArkimeData = await handleCredentials(username, password);
@@ -86,7 +92,20 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
               chrome.tabs.update(tabId, { url: `http://${hashedArkimeData.username}:${hashedArkimeData.password}@192.168.4.102:8005` });
             }
           break;
-
+        case CONFIG.SUBLIME:
+          username = url.searchParams.get("username");
+          password = url.searchParams.get("password");
+          const hashedSublime = await handleCredentials(username, password);
+          if (username && password) {
+            setTimeout(async () => {
+              await chrome.scripting.executeScript({
+                target: { tabId },
+                func: autofillSublimeForm,
+                args: [hashedSublime.username, hashedSublime.password],
+              });
+            },2000)
+          }
+          break
         default:
           console.log("No matching URL for automation:", url.href);
           return;
@@ -218,3 +237,27 @@ const secureAutofillFormWazuh = (username, password) => {
     console.error("Email or password fields not found.", email, password);
   }
 };
+
+
+const autofillSublimeForm =(email,password)=>{
+  const emailField = document.querySelector('input[type="email"]');
+  const passwordField = document.querySelector('input[type="password"]');
+  const submitButton = document.querySelector('button[data-testid="login-with-email-cta"]');
+  const secondsubmitButton = document.querySelector('button[data-testid="login-with-email-cta"]');
+  if (emailField && passwordField && submitButton) {
+    emailField.focus();
+    emailField.value = email;
+    emailField.dispatchEvent(new Event("input", { bubbles: true }));
+    emailField.dispatchEvent(new Event("change", { bubbles: true }));
+    submitButton.click();
+    passwordField.focus();
+    passwordField.value = password;
+    passwordField.dispatchEvent(new Event("input", { bubbles: true }));
+    passwordField.dispatchEvent(new Event("change", { bubbles: true }));
+    setTimeout(()=>{
+      secondsubmitButton.click();
+    },1000)
+  } else {
+    console.error("Email or password fields not found.", email, password);
+  }
+}
